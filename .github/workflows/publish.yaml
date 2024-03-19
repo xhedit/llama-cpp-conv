@@ -35,6 +35,11 @@ jobs:
         run: |
           python3 -m pip install --upgrade pip
           python3 -m pip install .[all] -v
+      - name: Build Wheel
+        id: build-wheel-sdist
+        run: |
+          python -m build -n
+          
       - uses: actions/upload-artifact@v3
         with:
           name: 'wheel'
