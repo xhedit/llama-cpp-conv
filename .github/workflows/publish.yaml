@@ -1,32 +1,50 @@
-name: Publish to PyPI
+name: Build Wheels & Release
 
-# Based on: https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/
+on:
+  workflow_dispatch:
+    inputs:
+      pypi:
+        description: 'Upload wheels to PyPI? 1 = yes, 0 = no'
+        default: '0'
+        required: true
+        type: string
 
-on: workflow_dispatch
+permissions:
+  contents: write
 
 jobs:
-  build-n-publish:
-    name: Build and publish
+  build_sdist_and_wheel:
+    name: Build source distribution and pure-Python wheel
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: "recursive"
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: "3.8"
-    - name: Install dependencies
-      run: |
-        python3 -m pip install --upgrade pip build
-        python3 -m pip install -e .[all]
-    - name: Build source distribution
-      run: |
-        python3 -m build --sdist
-    - name: Publish distribution to PyPI
-      # TODO: move to tag based releases
-      # if: startsWith(github.ref, 'refs/tags')
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        password: ${{ secrets.PYPI_API_TOKEN }}
+      - uses: actions/checkout@v2
+      - id: build
+        uses: OpenAstronomy/build-python-dist@v1
+        with:
+          pure_python_wheel: true
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: 'sdist'
+          path: ./dist/*
+
+  publish-sdist-to-pypi:
+    name: Publish Python distribution to PyPI
+    if: inputs.pypi == '1'
+    needs: build_sdist_and_wheel
+    runs-on: ubuntu-latest
+    
+    environment:
+      name: pypi
+      url: https://pypi.org/p/llama_cpp_conv
+    permissions:
+      id-token: write  # IMPORTANT: mandatory for trusted publishing
+      
+    steps:
+      - name: Download the sdist
+        uses: actions/download-artifact@v3
+        with:
+          name: sdist
+          path: dist/
+      - name: Publish distribution to PyPI
+        uses: pypa/gh-action-pypi-publish@v1.8.10
