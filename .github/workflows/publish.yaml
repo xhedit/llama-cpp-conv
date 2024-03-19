@@ -1,50 +1,114 @@
-name: Build Wheels & Release
+name: Tests
 
 on:
-  workflow_dispatch:
-    inputs:
-      pypi:
-        description: 'Upload wheels to PyPI? 1 = yes, 0 = no'
-        default: '0'
-        required: true
-        type: string
-
-permissions:
-  contents: write
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
 
 jobs:
-  build_sdist_and_wheel:
-    name: Build source distribution and pure-Python wheel
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - id: build
-        uses: OpenAstronomy/build-python-dist@v1
-        with:
-          pure_python_wheel: true
+  build-linux:
 
-      - uses: actions/upload-artifact@v3
-        with:
-          name: 'sdist'
-          path: ./dist/*
-
-  publish-sdist-to-pypi:
-    name: Publish Python distribution to PyPI
-    if: inputs.pypi == '1'
-    needs: build_sdist_and_wheel
     runs-on: ubuntu-latest
-    
-    environment:
-      name: pypi
-      url: https://pypi.org/p/llama_cpp_conv
-    permissions:
-      id-token: write  # IMPORTANT: mandatory for trusted publishing
-      
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+
     steps:
-      - name: Download the sdist
-        uses: actions/download-artifact@v3
+      - uses: actions/checkout@v4
         with:
-          name: sdist
-          path: dist/
-      - name: Publish distribution to PyPI
-        uses: pypa/gh-action-pypi-publish@v1.8.10
+          submodules: "recursive"
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install .[all] -v
+
+  build-windows:
+
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: "recursive"
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install .[all] -v
+      - name: Test with pytest
+        run: |
+          python3 -m pytest
+
+  build-macos:
+
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: "recursive"
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install .[all] --verbose
+
+  # build-linux-opencl:
+
+  #   runs-on: ubuntu-latest
+
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         submodules: "recursive"
+  #     - name: Set up Python 3.8
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version: "3.8"
+  #     - name: Set up OpenCL & CLBlast
+  #       run: |
+  #         wget -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | gpg --dearmor | sudo tee /usr/share/keyrings/oneapi-archive-keyring.gpg > /dev/null
+  #         echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list  
+  #         sudo apt-get update
+  #         sudo apt-get install -y --no-install-recommends llvm intel-oneapi-runtime-opencl intel-oneapi-runtime-compilers libclblast-dev
+  #     - name: Install dependencies
+  #       run: |
+  #         python3 -m pip install --upgrade pip
+  #         CMAKE_ARGS="-DLLAMA_CLBLAST=on" python3 -m pip install .[all] --verbose
+
+
+  build-macos-metal:
+
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: "recursive"
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.8"
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          CMAKE_ARGS="-DLLAMA_METAL=on" python3 -m pip install .[all] --verbose
