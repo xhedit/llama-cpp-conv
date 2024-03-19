@@ -7,6 +7,13 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      pypi:
+        description: 'Upload wheels to PyPI? 1 = yes, 0 = no'
+        default: '0'
+        required: true
+        type: string
 
 jobs:
   build-linux:
@@ -28,6 +35,10 @@ jobs:
         run: |
           python3 -m pip install --upgrade pip
           python3 -m pip install .[all] -v
+      - uses: actions/upload-artifact@v3
+        with:
+          name: 'wheel'
+          path: ./dist/* # Use ./dist/*.whl to only upload the JIT compile wheel
 
   build-windows:
 
@@ -48,6 +59,11 @@ jobs:
         run: |
           python3 -m pip install --upgrade pip
           python3 -m pip install .[all] -v
+      - uses: actions/upload-artifact@v3
+        with:
+          name: 'wheel'
+          path: ./dist/* # Use ./dist/*.whl to only upload the JIT compile wheel
+          
 
   build-macos:
 
@@ -68,7 +84,11 @@ jobs:
         run: |
           python3 -m pip install --upgrade pip
           python3 -m pip install .[all] --verbose
-
+      - uses: actions/upload-artifact@v3
+        with:
+          name: 'wheel'
+          path: ./dist/* # Use ./dist/*.whl to only upload the JIT compile wheel
+          
   # build-linux-opencl:
 
   #   runs-on: ubuntu-latest
@@ -109,3 +129,28 @@ jobs:
         run: |
           python3 -m pip install --upgrade pip
           CMAKE_ARGS="-DLLAMA_METAL=on" python3 -m pip install .[all] --verbose
+      - uses: actions/upload-artifact@v3
+        with:
+          name: 'wheel'
+          path: ./dist/* # Use ./dist/*.whl to only upload the JIT compile wheel
+
+  publish-to-pypi:
+    name: Publish Python distribution to PyPI
+    if: inputs.pypi == '1'
+    needs: ["build-linux", "build-windows", "build-macos", "build-macos-metal"]
+    runs-on: ubuntu-latest
+    
+    environment:
+      name: pypi
+      url: https://pypi.org/p/llama_cpp_python
+    permissions:
+      id-token: write  # IMPORTANT: mandatory for trusted publishing
+      
+    steps:
+      - name: Download the wheel
+        uses: actions/download-artifact@v3
+        with:
+          name: wheel
+          path: dist/
+      - name: Publish distribution to PyPI
+        uses: pypa/gh-action-pypi-publish@v1.8.10
