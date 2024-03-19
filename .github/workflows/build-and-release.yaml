@@ -82,7 +82,7 @@ jobs:
   publish-sdist-to-pypi:
     name: Release
     needs: [build_wheels, build_sdist]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     
     environment:
       name: pypi
