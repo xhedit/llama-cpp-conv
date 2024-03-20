@@ -3,7 +3,7 @@ requires = ["scikit-build-core[pyproject]>=0.5.1"]
 build-backend = "scikit_build_core.build"
 
 [project]
-name = "llama_cpp_conv"
+name = "llama-cpp-conv"
 dynamic = ["version"]
 description = "llama.cpp (GGUF) conversion for pypi"
 readme = "README.md"
@@ -52,7 +52,7 @@ dev = [
     "httpx>=0.24.1",
 ]
 all = [
-    "llama_cpp_conv[server,test,dev]",
+    "llama-cpp-conv[server,test,dev]",
 ]
 
 [tool.scikit-build]
