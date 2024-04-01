@@ -11,7 +11,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macOS-latest]
+        os: [ubuntu-latest, windows-latest]
 
     steps:
       - uses: actions/checkout@v3
@@ -78,3 +78,23 @@ jobs:
           files: dist/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-sdist-to-pypi:
+    name: Release
+    needs: [build_wheels, build_sdist]
+    runs-on: ubuntu-latest
+    
+    environment:
+      name: pypi
+      url: https://pypi.org/p/llama_cpp_conv
+    permissions:
+      id-token: write  # IMPORTANT: mandatory for trusted publishing
+      
+    steps:
+      - name: Download the sdist
+        uses: actions/download-artifact@v3
+        with:
+          name: artifact
+          path: dist
+      - name: Publish distribution to PyPI
+        uses: pypa/gh-action-pypi-publish@v1.8.10
