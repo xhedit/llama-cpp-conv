@@ -96,7 +96,7 @@ jobs:
 
   release:
     name: Release
-    needs: [build_wheels, build_wheels_arm64, build_sdist]
+    needs: [build_wheels, build_sdist]
     runs-on: ubuntu-latest
 
     steps:
