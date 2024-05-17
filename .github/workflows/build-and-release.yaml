@@ -31,6 +31,7 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.17.0
         env:
+          CIBW_SKIP: "*i686*"  # This line skips building i686 wheels
           # disable repair
           CIBW_REPAIR_WHEEL_COMMAND: ""
         with:
