@@ -16,10 +16,14 @@ max_tokens_field = Field(
     default=16, ge=1, description="The maximum number of tokens to generate."
 )
 
+min_tokens_field = Field(
+    default=0,
+    ge=0,
+    description="The minimum number of tokens to generate. It may return fewer tokens if another condition is met (e.g. max_tokens, stop).",
+)
+
 temperature_field = Field(
     default=0.8,
-    ge=0.0,
-    le=2.0,
     description="Adjust the randomness of the generated text.\n\n"
     + "Temperature is a hyperparameter that controls the randomness of the generated text. It affects the probability distribution of the model's output tokens. A higher temperature (e.g., 1.5) makes the output more random and creative, while a lower temperature (e.g., 0.5) makes the output more focused, deterministic, and conservative. The default value is 0.8, which provides a balance between randomness and determinism. At the extreme, a temperature of 0 will always pick the most likely next token, leading to identical outputs in each run.",
 )
@@ -113,6 +117,7 @@ class CreateCompletionRequest(BaseModel):
     max_tokens: Optional[int] = Field(
         default=16, ge=0, description="The maximum number of tokens to generate."
     )
+    min_tokens: int = min_tokens_field
     temperature: float = temperature_field
     top_p: float = top_p_field
     min_p: float = min_p_field
@@ -208,6 +213,7 @@ class CreateChatCompletionRequest(BaseModel):
         default=None,
         description="The maximum number of tokens to generate. Defaults to inf",
     )
+    min_tokens: int = min_tokens_field
     logprobs: Optional[bool] = Field(
         default=False,
         description="Whether to output the logprobs or not. Default is True"
