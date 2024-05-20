@@ -31,9 +31,10 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.17.0
         env:
-          CIBW_SKIP: "*i686*"  # This line skips building i686 wheels
           # disable repair
           CIBW_REPAIR_WHEEL_COMMAND: ""
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
+          CIBW_MANYLINUX_I686_IMAGE: manylinux2014
         with:
           package-dir: .
           output-dir: wheelhouse
@@ -63,6 +64,7 @@ jobs:
           CIBW_REPAIR_WHEEL_COMMAND: ""
           CIBW_ARCHS: "aarch64"
           CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-*"
+          CIBW_MANYLINUX_AARCH64_IMAGE: manylinux2014
         with:
           output-dir: wheelhouse
 
