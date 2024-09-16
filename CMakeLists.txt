@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.21)
 project(llama_cpp)
 
 option(LLAMA_BUILD "Build llama.cpp shared library and install alongside python package" ON)
-option(LLAVA_BUILD "Build llava shared library and install alongside python package" ON)
+option(LLAVA_BUILD "Build llava shared library and install alongside python package" OFF)
 
 function(llama_cpp_python_install_target target)
     install(
@@ -42,7 +42,7 @@ function(llama_cpp_python_install_target target)
 endfunction()
 
 if (LLAMA_BUILD)
-    set(BUILD_SHARED_LIBS "On")
+    set(BUILD_SHARED_LIBS "OFF")
 
     set(CMAKE_SKIP_BUILD_RPATH FALSE)
 
@@ -70,6 +70,8 @@ if (LLAMA_BUILD)
     endif()
 
     add_subdirectory(vendor/llama.cpp)
+    add_subdirectory(vendor/llama.cpp/examples/quantize)
+    add_subdirectory(vendor/llama.cpp/examples/imatrix)
     llama_cpp_python_install_target(llama)
     llama_cpp_python_install_target(ggml)
     
